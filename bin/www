@@ -1,0 +1,164 @@
+// Set your secret key. Remember to switch to your live secret key in production.
+// See your keys here: https://dashboard.stripe.com/apikeys
+const stripe = require('stripe')('sk_test_51JoDVgBMpX7MLTCTYDehjyeT3yOj6W57YL6BWuowhC5ai7kJ2iOiYJmEGMhFqPZQVhVsysowXZMaJoMOrO9ZzL1T00pQ69sr5R');
+// const request = require('http').request()
+const fs = require('fs');
+const email = "emailgfxdf@email.com"
+const url = "press2eat.com"
+const address = "direccion 1"
+
+const deleteAccount = (id) => {
+
+  stripe.accounts.del(
+    id
+  );
+}
+const getAccounts = () => {
+  stripe.accounts.list({
+    limit: 10,
+  }).then((response) => {
+    console.log(response)
+  })
+}
+const getAccount = (id) => {
+  stripe.accounts.retrieve(
+    id
+  ).then((response) => {
+    console.log(response)
+  })
+}
+
+const deleteAllAccounts = () => {
+  stripe.accounts.list({
+    limit: 30,
+  }).then((response) => {
+    response.data.forEach(element => {
+
+      deleteAccount(element.id)
+    });
+  })
+}
+
+
+const accept = async (id) => {
+  await stripe.accounts.update(
+    id,
+    {
+      business_profile: {
+        industry: "food_and_drink__restaurants"
+      }
+    }
+  );
+}
+const createAcount = () => {
+
+  stripe.accounts.create({
+    type: 'custom',
+    email: "tec19@tec.mx",
+    country: "MX",
+    business_type: "company",
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true },
+    },
+    company: {
+      name: "burritos 31",
+      address: {
+        city: "Chihuahua",
+        country: "MX",
+        line1: "Perritosr 10909",
+        line2: "La Escuela",
+        postal_code: "31146",
+        state: "Chih."
+      },
+      phone: "6144048484",
+      tax_id: "RUNM971216B54"
+    },
+    business_profile: {
+      mcc: 5814,
+      product_description: "Restaurante de camarones",
+      support_email: "an@gmail.com",
+      support_phone: "+526144048313",
+      url: "press2eat.com"
+    },
+    external_account: {
+      object: "bank_account",
+      country: "MX",
+      currency: "mxn",
+      account_number: "000000001234567897",
+      account_holder_name: "mario ruiz"
+    },
+    tos_acceptance: {
+      date: Math.floor(Date.now() / 1000),
+      ip: "189.154.235.9",
+    }
+  })
+    .then(async(account) => {
+      console.log(account.id)
+
+      var fp = fs.readFileSync('/Users/andres/Downloads/success.png');
+      var front = await stripe.files.create({
+        purpose: 'identity_document',
+        file: {
+          data: fp,
+          name: 'front.jpg',
+          type: 'application/octet-stream',
+        },
+      });
+      var back = await stripe.files.create({
+        purpose: 'identity_document',
+        file: {
+          data: fp,
+          name: 'back.jpg',
+          type: 'application/octet-stream',
+        },
+      });
+      stripe.accounts.createPerson(
+        account.id,
+        {
+          address: {
+            city: "Chihuahua",
+            country: "MX",
+            line1: "calle nuevos aires 10900",
+            postal_code: "31146",
+            state: "Chihuahua"
+          },
+          dob: {
+            day: "16",
+            month: "12",
+            year: "1997"
+          },
+          email: "marioruiznavejas@gmail.com",
+          first_name: "mario andres",
+          last_name: "Ruiz Navejas",
+          phone: "6144048313",
+          id_number: "RUNM971216B54",
+          relationship: {
+            owner: true,
+            percent_ownership: "100",
+            representative: true
+          },
+          verification:{
+            document:{
+              front: front.id,
+              back: back.id
+            }
+          }
+        }).then(response => console.log(response))
+        .catch(error => console.log(error))
+
+    })
+    .catch(error => console.error(error));
+}
+stripe.transfers.create({
+  amount: 400,
+  currency: 'mxn',
+  destination: 'acct_1JodkYPbYWr4VdbL',
+}).then(response => console.log(response))
+  .catch(error => console.error(error));
+
+createAcount()
+// getAccounts()
+// deleteAllAccounts()
+// accept('acct_1JodjPPZcK1BiFVx')
+// getAccount()
